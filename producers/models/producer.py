@@ -31,16 +31,8 @@ class Producer:
         self.num_partitions = num_partitions
         self.num_replicas = num_replicas
 
-        #
-        #
-        # TODO: Configure the broker properties below. Make sure to reference the project README
-        # and use the Host URL for Kafka and Schema Registry!
-        #
-        #
         self.broker_properties = {
-            # TODO
-            # TODO
-            # TODO
+            "bootstrap.servers": "localhost:9092,localhost:9093,localhost:9094"
         }
 
         # If the topic does not already exist, try to create it
@@ -48,32 +40,28 @@ class Producer:
             self.create_topic()
             Producer.existing_topics.add(self.topic_name)
 
-        # TODO: Configure the AvroProducer
-        # self.producer = AvroProducer(
-        # )
+        self.producer = AvroProducer(
+            config = {
+                "bootstrap.servers": "localhost:9092,localhost:9093,localhost:9094",
+                "schema.registry.url": "http://localhost:8081",
+            }, 
+            default_key_schema = self.key_schema,
+            default_value_schema = self.value_schema
+        )
 
     def create_topic(self):
         """Creates the producer topic if it does not already exist"""
-        #
-        #
-        # TODO: Write code that creates the topic for this producer if it does not already exist on
-        # the Kafka Broker.
-        #
-        #
-        logger.info("topic creation kafka integration incomplete - skipping")
 
+        admin_client = AdminClient(self.broker_properties)
+
+        new_topic = NewTopic(self.topic_name, 1, 1)
+        admin_client.create_topics([new_topic])
+        
     def time_millis(self):
         return int(round(time.time() * 1000))
 
     def close(self):
         """Prepares the producer for exit by cleaning up the producer"""
-        #
-        #
-        # TODO: Write cleanup code for the Producer here
-        #
-        #
-        logger.info("producer close incomplete - skipping")
-
-    def time_millis(self):
-        """Use this function to get the key for Kafka Events"""
-        return int(round(time.time() * 1000))
+        self.producer.flush()
+        self.producer.close()
+        logger.info(f"Producer for topic : {self.topic_name} has been flushed and closed.")
